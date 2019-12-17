@@ -29,7 +29,11 @@ private extension CKFSession.DeviceType {
     var captureDeviceType: AVCaptureDevice.DeviceType {
         switch self {
         case .frontCamera, .backCamera:
-            return .builtInWideAngleCamera
+            if #available(iOS 13.0, *) {
+                return .builtInUltraWideCamera
+            } else {
+                return .builtInWideAngleCamera
+            }
         case .microphone:
             return .builtInMicrophone
         }
