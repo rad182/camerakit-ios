@@ -26,16 +26,21 @@ public extension UIDeviceOrientation {
 
 private extension CKFSession.DeviceType {
     
-    var captureDeviceType: AVCaptureDevice.DeviceType {
+    var captureDeviceTypes: [AVCaptureDevice.DeviceType] {
         switch self {
         case .frontCamera, .backCamera:
+            // return best device to capture
+            var deviceTypes = [AVCaptureDevice.DeviceType]()
+
             if #available(iOS 13.0, *) {
-                return .builtInUltraWideCamera
-            } else {
-                return .builtInWideAngleCamera
+                deviceTypes.append(.builtInUltraWideCamera)
+                deviceTypes.append(.builtInDualWideCamera)
             }
+            deviceTypes.append(.builtInWideAngleCamera)
+
+            return deviceTypes
         case .microphone:
-            return .builtInMicrophone
+            return [.builtInMicrophone]
         }
     }
     
@@ -120,7 +125,7 @@ extension CKFSession.CameraPosition {
     
     @objc public static func captureDeviceInput(type: DeviceType) throws -> AVCaptureDeviceInput {
         let captureDevices = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [type.captureDeviceType],
+            deviceTypes: type.captureDeviceTypes,
             mediaType: type.captureMediaType,
             position: type.capturePosition)
         
