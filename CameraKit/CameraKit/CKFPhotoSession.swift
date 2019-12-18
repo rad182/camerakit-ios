@@ -64,7 +64,7 @@ extension CKFSession.FlashMode {
     
     @objc public var flashMode = CKFSession.FlashMode.off
     
-    public var captureDeviceInput: AVCaptureDeviceInput? {
+    @objc public var captureDeviceInput: AVCaptureDeviceInput? {
         didSet {
             self.faceDetectionBoxes.forEach({ $0.removeFromSuperview() })
             self.faceDetectionBoxes = []
