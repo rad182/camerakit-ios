@@ -181,6 +181,11 @@ extension CKFSession.FlashMode {
             }
         }
     }
+
+    public func photoOutput(_ output: AVCapturePhotoOutput, willCapturePhotoFor resolvedSettings: AVCaptureResolvedPhotoSettings) {
+        // dispose system shutter sound
+        AudioServicesDisposeSystemSoundID(1108)
+    }
     
     @available(iOS 11.0, *)
     public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
