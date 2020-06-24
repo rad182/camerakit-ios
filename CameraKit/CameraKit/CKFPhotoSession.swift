@@ -186,7 +186,9 @@ extension CKFSession.FlashMode {
         // dispose system shutter sound
         AudioServicesDisposeSystemSoundID(1108)
     }
-    
+
+    var rawPhotoData: Data!
+
     @available(iOS 11.0, *)
     public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         defer {
@@ -204,44 +206,24 @@ extension CKFSession.FlashMode {
             return
         }
 
-        self.processPhotoData(data: data, resolvedSettings: photo.resolvedSettings)
+        if photo.isRawPhoto {
+            rawPhotoData = photo.fileDataRepresentation()
+        } else {
+            self.processPhotoData(rawPhotoData: rawPhotoData, processedPhotoData: data, resolvedSettings: photo.resolvedSettings)
+        }
     }
     
-    public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?, previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
-        defer {
-            self.captureCallback = { (_, _, _) in }
-            self.errorCallback = { (_) in }
-        }
+    private func processPhotoData(rawPhotoData: Data, processedPhotoData: Data, resolvedSettings: AVCaptureResolvedPhotoSettings) {
+        guard let image = UIImage(data: processedPhotoData) else { return }
 
-        if let error = error {
-            self.errorCallback(error)
-            return
-        }
-
-        guard
-            let photoSampleBuffer = photoSampleBuffer, let previewPhotoSampleBuffer = previewPhotoSampleBuffer,
-            let data = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: photoSampleBuffer, previewPhotoSampleBuffer: previewPhotoSampleBuffer) else
+        if self.resolution.width > 0, self.resolution.height > 0,
+            let transformedImage = CKUtils.cropAndScale(image, width: Int(self.resolution.width), height: Int(self.resolution.height), orientation: UIDevice.current.orientation, mirrored: self.cameraPosition == .front)
         {
-            self.errorCallback(CKFError.error("Cannot get photo file data representation"))
-            return
+            self.captureCallback(transformedImage, rawPhotoData, resolvedSettings)
+               return
         }
 
-        self.processPhotoData(data: data, resolvedSettings: resolvedSettings)
-    }
-    
-    private func processPhotoData(data: Data, resolvedSettings: AVCaptureResolvedPhotoSettings) {
-        if let image = UIImage(data: data) {
-            if self.resolution.width > 0, self.resolution.height > 0,
-                let transformedImage = CKUtils.cropAndScale(image, width: Int(self.resolution.width), height: Int(self.resolution.height), orientation: UIDevice.current.orientation, mirrored: self.cameraPosition == .front)
-                   {
-                       self.captureCallback(transformedImage, data, resolvedSettings)
-                       return
-                   }
-        }
-
-
-
-        self.captureCallback(nil, data, resolvedSettings)
+        self.captureCallback(image, rawPhotoData, resolvedSettings)
     }
     
     public func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
