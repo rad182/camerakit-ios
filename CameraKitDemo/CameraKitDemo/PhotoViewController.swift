@@ -8,6 +8,7 @@
 
 import UIKit
 import CameraKit
+import AVFoundation
 
 class PhotoPreviewViewController: UIViewController, UIScrollViewDelegate {
     
@@ -167,11 +168,11 @@ class PhotoViewController: UIViewController, CKFSessionDelegate {
     
     @IBAction func handleCapture(_ sender: Any) {
         if let session = self.previewView.session as? CKFPhotoSession {
-            session.capture({ (image, _) in
-                self.performSegue(withIdentifier: "Preview", sender: image)
-            }) { (_) in
-                //
-            }
+          session.capture(AVCapturePhotoSettings(), { (image, data, settings) in
+            self.performSegue(withIdentifier: "Preview", sender: image)
+          }) { (_) in
+            //
+          }
         }
     }
     
