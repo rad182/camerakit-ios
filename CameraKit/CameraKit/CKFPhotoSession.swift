@@ -191,11 +191,6 @@ extension CKFSession.FlashMode {
 
     @available(iOS 11.0, *)
     public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        defer {
-            self.captureCallback = { (_, _, _) in }
-            self.errorCallback = { (_) in }
-        }
-
         if let error = error {
             self.errorCallback(error)
             return
@@ -214,6 +209,11 @@ extension CKFSession.FlashMode {
     }
     
     private func processPhotoData(rawPhotoData: Data?, processedPhotoData: Data, resolvedSettings: AVCaptureResolvedPhotoSettings) {
+        defer {
+            self.captureCallback = { (_, _, _) in }
+            self.errorCallback = { (_) in }
+        }
+
         guard let image = UIImage(data: processedPhotoData) else { return }
 
         if self.resolution.width > 0, self.resolution.height > 0,
