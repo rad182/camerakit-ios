@@ -102,11 +102,11 @@ extension CKFSession.FlashMode {
     var captureCallback: (UIImage, AVCaptureResolvedPhotoSettings) -> Void = { (_, _) in }
     var errorCallback: (Error) -> Void = { (_) in }
     
-    @objc public func capture(_ callback: @escaping (UIImage, AVCaptureResolvedPhotoSettings) -> Void, _ error: @escaping (Error) -> Void) {
+    @objc public func capture(_ settings: AVCapturePhotoSettings? = AVCapturePhotoSettings(), _ callback: @escaping (UIImage, AVCaptureResolvedPhotoSettings) -> Void, _ error: @escaping (Error) -> Void) {
         self.captureCallback = callback
         self.errorCallback = error
 
-        let settings = AVCapturePhotoSettings()
+        guard let settings = settings else { return }
         settings.flashMode = self.flashMode.captureFlashMode
 
         if let connection = self.photoOutput.connection(with: .video) {
