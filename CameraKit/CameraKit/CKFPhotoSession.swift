@@ -99,10 +99,10 @@ extension CKFSession.FlashMode {
         self.faceDetectionBoxes.forEach({ $0.removeFromSuperview() })
     }
     
-    var captureCallback: (UIImage, AVCaptureResolvedPhotoSettings) -> Void = { (_, _) in }
+    var captureCallback: (UIImage?, Data, AVCaptureResolvedPhotoSettings) -> Void = { (_, _, _)  in }
     var errorCallback: (Error) -> Void = { (_) in }
     
-    @objc public func capture(_ settings: AVCapturePhotoSettings? = AVCapturePhotoSettings(), _ callback: @escaping (UIImage, AVCaptureResolvedPhotoSettings) -> Void, _ error: @escaping (Error) -> Void) {
+    @objc public func capture(_ settings: AVCapturePhotoSettings? = AVCapturePhotoSettings(), _ callback: @escaping (UIImage?, Data, AVCaptureResolvedPhotoSettings) -> Void, _ error: @escaping (Error) -> Void) {
         self.captureCallback = callback
         self.errorCallback = error
 
@@ -190,7 +190,7 @@ extension CKFSession.FlashMode {
     @available(iOS 11.0, *)
     public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         defer {
-            self.captureCallback = { (_, _) in }
+            self.captureCallback = { (_, _, _) in }
             self.errorCallback = { (_) in }
         }
 
@@ -209,7 +209,7 @@ extension CKFSession.FlashMode {
     
     public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?, previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
         defer {
-            self.captureCallback = { (_, _) in }
+            self.captureCallback = { (_, _, _) in }
             self.errorCallback = { (_) in }
         }
 
@@ -230,20 +230,18 @@ extension CKFSession.FlashMode {
     }
     
     private func processPhotoData(data: Data, resolvedSettings: AVCaptureResolvedPhotoSettings) {
-        guard let image = UIImage(data: data) else {
-            self.errorCallback(CKFError.error("Cannot get photo"))
-            return
+        if let image = UIImage(data: data) {
+            if self.resolution.width > 0, self.resolution.height > 0,
+                let transformedImage = CKUtils.cropAndScale(image, width: Int(self.resolution.width), height: Int(self.resolution.height), orientation: UIDevice.current.orientation, mirrored: self.cameraPosition == .front)
+                   {
+                       self.captureCallback(transformedImage, data, resolvedSettings)
+                       return
+                   }
         }
 
-        if
-            self.resolution.width > 0, self.resolution.height > 0,
-            let transformedImage = CKUtils.cropAndScale(image, width: Int(self.resolution.width), height: Int(self.resolution.height), orientation: UIDevice.current.orientation, mirrored: self.cameraPosition == .front)
-        {
-            self.captureCallback(transformedImage, resolvedSettings)
-            return
-        }
 
-        self.captureCallback(image, resolvedSettings)
+
+        self.captureCallback(nil, data, resolvedSettings)
     }
     
     public func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
