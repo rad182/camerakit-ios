@@ -99,10 +99,10 @@ extension CKFSession.FlashMode {
         self.faceDetectionBoxes.forEach({ $0.removeFromSuperview() })
     }
     
-    var captureCallback: (UIImage?, Data, AVCaptureResolvedPhotoSettings) -> Void = { (_, _, _)  in }
+    var captureCallback: (UIImage, Data, AVCaptureResolvedPhotoSettings) -> Void = { (_, _, _)  in }
     var errorCallback: (Error) -> Void = { (_) in }
     
-    @objc public func capture(_ settings: AVCapturePhotoSettings? = AVCapturePhotoSettings(), _ callback: @escaping (UIImage?, Data, AVCaptureResolvedPhotoSettings) -> Void, _ error: @escaping (Error) -> Void) {
+    @objc public func capture(_ settings: AVCapturePhotoSettings? = AVCapturePhotoSettings(), _ callback: @escaping (UIImage, Data, AVCaptureResolvedPhotoSettings) -> Void, _ error: @escaping (Error) -> Void) {
         self.captureCallback = callback
         self.errorCallback = error
 
