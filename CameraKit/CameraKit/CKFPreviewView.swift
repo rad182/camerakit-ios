@@ -94,8 +94,8 @@ public protocol CKFPreviewViewDelegate: NSObjectProtocol {
     
     @objc private func handleTap(recognizer: UITapGestureRecognizer) {
         let location = recognizer.location(in: self)
+        self.delegate?.previewViewWillFocusAtPoint(point: location)
         if let point = self.previewLayer?.captureDevicePointConverted(fromLayerPoint: location) {
-            self.delegate?.previewViewWillFocusAtPoint(point: point)
             self.session?.focus(at: point)
         }
     }
