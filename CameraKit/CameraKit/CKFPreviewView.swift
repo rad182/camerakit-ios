@@ -9,9 +9,15 @@
 import UIKit
 import AVFoundation
 
+public protocol CKFPreviewViewDelegate: NSObjectProtocol {
+    func previewViewWillFocusAtPoint(point: CGPoint)
+}
+
 @objc public class CKFPreviewView: UIView {
     
     private var lastScale: CGFloat = 1.0
+
+    public var delegate: CKFPreviewViewDelegate?
     
     @objc private(set) public var previewLayer: AVCaptureVideoPreviewLayer? {
         didSet {
@@ -89,6 +95,7 @@ import AVFoundation
     @objc private func handleTap(recognizer: UITapGestureRecognizer) {
         let location = recognizer.location(in: self)
         if let point = self.previewLayer?.captureDevicePointConverted(fromLayerPoint: location) {
+            self.delegate?.previewViewWillFocusAtPoint(point: point)
             self.session?.focus(at: point)
         }
     }
